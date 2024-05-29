@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<!--
+                             <\              _
+                               \\          _/{
+  onyx                  _       \\       _-   -_
+  gvhmodguide         /{        / `\   _-  -  - -_
+  v^v^              _~  =      ( @  \ -    -   -  -_
+  ready?          _- -   ~-_   \( \  \      -    -  -_
+                _~  -   -   ~_ | 1 \  \      _-~-_ -  -_
+              _-   -    -     ~  |V: \ \  _-~     ~-_-  -_
+           _-~   -    -       /  | :  \ \            ~-_- -_
+        _-~    -   _.._      {   | : _-``               ~- _-_
+     _-~   -__..--~    ~-_  {   : \:}
+   =~__.--~~              ~-_\  :  /
+                              \ : /__
+                             //`Y'--\\      =
+                            <+       \\
+                             \\      WWW
+                             MMM
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mod Install Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<script>
+
+    /*
+    * i hate writing websites so much
+    * so so much
+    *
+    * do me a favor and just, stop reading this <3
+    * */
+
+    function load() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var scene = urlParams.get('scene');
+        if (scene !== null && scene !== "start") {
+            loadSceneDirect(scene);
+        }
+    }
+
+    window.addEventListener("popstate", function(e) {
+        var urlParams = new URLSearchParams(window.location.search);
+        var scene = urlParams.get('scene');
+        if (scene !== null) {
+            loadSceneDirect(scene);
+        }
+        else if (currentScene !== "start")
+        {
+            loadSceneDirect("start");
+        }
+    });
+
+    var currentScene = "start";
+    var sceneQueue = [];
+    var bepinexSceneTrack = [
+        "backup",
+        "bepinex-unzip",
+        "gvh-open",
+        "bepinex-copy",
+        "bepinex-done",
+        "open-plugins",
+        "copy-mod",
+        "mod-done",
+        "done",
+        "start"
+    ];
+    var modSceneTrack = [
+        "backup",
+        "gvh-open",
+        "open-plugins",
+        "copy-mod",
+        "mod-done",
+        "done",
+        "start"
+    ];
+    var horribleSceneToProgressionMap = {
+        "start": -1,
+        "backup": 0,
+        "bepinex-unzip": 1,
+        "gvh-open": 1,
+        "bepinex-copy": 1,
+        "bepinex-done": 1,
+        "open-plugins": 2,
+        "copy-mod": 2,
+        "mod-done": 2,
+        "done": 3,
+    }
+    var currentSceneTrack = null;
+
+    function queueBepinExScene() {
+        sceneQueue = [...bepinexSceneTrack];
+        currentSceneTrack = [...bepinexSceneTrack];
+
+        spinQueue();
+    }
+
+    function queueModScene() {
+        sceneQueue = [...modSceneTrack];
+        currentSceneTrack = [...modSceneTrack];
+
+        spinQueue();
+    }
+
+    function updateProgressionTrackForScene(scene) {
+        var index = horribleSceneToProgressionMap[scene];
+
+        for (var i = 0; i < 4; i++)
+        {
+            document.getElementById("stepper").children[i].classList.remove("complete");
+            document.getElementById("stepper").children[i].classList.remove("current");
+        }
+        for (var i = index-1; i >= 0; i--)
+        {
+            document.getElementById("stepper").children[i].classList.add("complete");
+        }
+        document.getElementById("stepper").children[index].classList.add("current");
+        if (!currentSceneTrack.includes("bepinex-unzip"))
+            document.getElementById("stepper").children[1].classList.add("gone");
+        else
+            document.getElementById("stepper").children[1].classList.remove("gone");
+    }
+
+    function loadSceneDirect(scene) {
+        if (currentSceneTrack === null)
+            currentSceneTrack = [...bepinexSceneTrack];
+
+        var index = currentSceneTrack.indexOf(scene);
+        if (index === -1)
+            return;
+
+        sceneQueue = [...currentSceneTrack.slice(index)];
+        spinQueue(false);
+    }
+
+    function loadPrevScene() {
+        var prevScene = currentSceneTrack[currentSceneTrack.indexOf(currentScene) - 1];
+        if (prevScene !== undefined)
+            loadSceneDirect(prevScene);
+    }
+
+    var spinning = false;
+
+    function spinQueue(addHistory) {
+        if (spinning)
+            return;
+        spinning = true;
+        if (addHistory === undefined)
+            addHistory = true;
+
+        if (sceneQueue.length > 0) {
+            var scene = sceneQueue.shift();
+            if (addHistory)
+                history.pushState(null, null, window.location.pathname + "?scene=" + scene)
+
+            if (scene === "start")
+                location.reload(); // ITS JUST EASIER OKAY
+            else
+                document.getElementById("footer").classList.add("gone");
+
+            updateProgressionTrackForScene(scene);
+
+            var currentSceneElement = document.getElementById("scene-" + currentScene);
+            var nextSceneElement = document.getElementById("scene-" + scene);
+
+            currentSceneElement.classList.add("hidden");
+            setTimeout(function() {
+                currentSceneElement.classList.add("gone");
+                nextSceneElement.classList.remove("gone");
+                nextSceneElement.classList.remove("hidden");
+                if (currentScene === "start") {
+                    document.querySelector(".step-menu").classList.remove("hidden");
+                    document.querySelector(".step-menu").classList.remove("gone");
+                }
+                currentScene = scene;
+                spinning=false;
+            }, 250);
+        }
+    }
+
+    document.onreadystatechange = function () {
+        // noinspection EqualityComparisonWithCoercionJS
+        if (document.readyState == "complete") {
+            load();
+        }
+    }
+
+
+</script>
+<style>
+
+    body {
+        background-color: #000;
+        color:white;
+    }
+
+    .hidden {
+        opacity: 0;
+    }
+
+    .gone {
+        display: none!important;
+    }
+
+    .scene-onecol {
+        width: 70%;
+        margin: 20px auto;
+    }
+
+    #background-video {
+        width: 100vw;
+        height: 100vh;
+        opacity: 0.4;
+        object-fit: cover;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: -1;
+    }
+
+    .buttons button {
+        padding: 10px 20px;
+        margin: 0px 20px;
+        border-color: transparent;
+        background-color: #ffffffb2;
+        border-radius: 3px;
+    }
+
+    p {
+        margin: 4vh 0;
+    }
+
+    .content {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .scene {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        height: 100%;
+        width: 100%;
+        animation-duration: 0.25s;
+    }
+
+    .tutimg-spread {
+        max-height: 270px;
+    }
+
+    .scene:not(.hidden) {
+        z-index: 10000;
+    }
+
+    #scene-start .contentregion {
+        flex: 66%;
+        text-align: center;
+        height: 70%;
+        margin: auto 60px;
+        padding-left: 10%;
+        padding-right: 10%;
+    }
+
+    #scene-start .sidebarregion {
+        flex: 33%;
+        text-align: left;
+        margin-top: auto;
+        margin-bottom: auto;
+        height: calc(70% - 120px);
+        border-left: solid 1px black;
+        padding-left: 20px;
+    }
+
+
+    .step-menu {
+        list-style-type: none;
+        width: auto;
+        margin: 40px auto;
+        display: table;
+    }
+    .step-menu li {
+        box-sizing: border-box;
+        float: left;
+        background: #2d2d2d;
+        height: 50px;
+        text-align: center;
+        padding: 15px 15px 15px 50px;
+        position: relative;
+        margin-left: 10px
+    }
+    .step-menu li:before {
+        content: '';
+        position: absolute;
+        border: 25px solid transparent;
+        border-left-color: #000000e0;
+        top:0px;
+        right: -60px;
+    }
+    .step-menu li:after {
+        content: '';
+        position: absolute;
+        border: 25px solid transparent;
+        border-left-color: #2d2d2d;
+        top:0px;
+        right: -50px;
+    }
+    .step-menu li:nth-child(1) {
+        z-index:600;
+        margin-left: 0;
+        padding-left: 30px
+    }
+    .step-menu li:nth-child(2) {
+        z-index:500;
+    }
+    .step-menu li:nth-child(3) {
+        z-index:400;
+    }
+    .step-menu li:nth-child(4) {
+        z-index:300;
+    }
+    .step-menu li:nth-child(5) {
+        z-index:200;
+    }
+    .step-menu li:nth-child(6) {
+        z-index:100;
+        padding-right:30px
+    }
+    .step-menu li:last-child:after,
+    .step-menu li:last-child:before {
+        border: none
+    }
+    .step-menu li.current {
+        background: rgba(51,122,183, 0.75);
+        color: white;
+    }
+    .step-menu li.current:after {
+        border-left-color: rgba(51,122,183, 0.75);
+    }
+    .step-menu li.complete {
+        background: rgba(51,122,183, 0.4);
+        color: white;
+    }
+    .step-menu li.complete:after {
+        border-left-color: rgba(51,122,183, 0.4);
+    }
+
+    .step-menu .modonlymode:nth-child(1) {
+        display: none;
+    }
+</style>
+<body onload="load()">
+    <video id="background-video" autoplay loop muted>
+        <source src="/wall_anim.mp4" type="video/mp4">
+    </video>
+    <div class="content">
+        <div id="scene-start" class="scene">
+            <div class="contentregion">
+                <h1>Install Guide</h1>
+                <p>This is an install guide for the “Chapter Select” mod.<br>
+                For support or help, message <code>onyx.eyes</code> on discord. Do not bother KO_OP. Please.</p>
+                <p>Modding GVH is identical to other Unity games (for example, Lethal Company), however, since our community is much smaller we do not yet have a page in Mod Mangers.</p>
+                <p>As such you will need to install the “Mod loader” (BepinEx) and the mod itself
+                manually.</p>
+                <p>This guide will walk you through that. If you know what you’re doing already, files are on the right.</p>
+                <p>Otherwise, select the appropriate option:</p>
+                <div class="buttons">
+                    <button type="submit" onclick="queueModScene()">I have BepinEx installed</button>
+                    <button type="submit" onclick="queueBepinExScene()">I haven't installed anything</button>
+                </div>
+            </div>
+            <div class="sidebarregion">
+                <h3 class="modname">Mod Name</h3>
+                <span class="version">Version: 1.0.0</span><br>
+                <span class="author">Author: onyx</span>
+                <div class="filebox">
+                    <h5>Files</h5>
+                    <ul id="filelist">
+                        <li><a href="BepInEx_win_x64_5.4.23.1.zip">BepInEx_win_x64_5.4.23.1.zip</a></li>
+                        <li><a href="mods/ChapterSelect.dll">ChapterSelect.dll</a></li>
+                    </ul>
+                </div>
+                <div class="description">
+                </div>
+            </div>
+        </div>
+        <ul id="stepper" class="step-menu hidden gone">
+            <li role="button" class="current" onclick="loadSceneDirect('backup')">Backup</li>
+            <li role="button" onclick="loadSceneDirect('bepinex-unzip')">Install BepinEx</li>
+            <li role="button" onclick="loadSceneDirect('open-plugins')">Install Mod</li>
+            <li role="button" onclick="loadSceneDirect('mod-done')">Done! :D</li>
+        </ul>
+        <div id="scene-gvh-open" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Opening the GVH Folder</h1>
+                <p>1. Open the GVH Library page in steam. Click the Settings Icon, Manage, Browse local files</p>
+                <img src="img/backup_libpage.png" class="tutimg-spread"/>
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+        </div>
+        <div id="scene-backup" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Backing up your saves</h1>
+
+                You don't <i>need</i> to do this, but it's never a bad idea.
+
+                <p>1. Open the GVH Library page in steam. Click the Settings Icon, Manage, Browse local files</p>
+                <img src="img/backup_libpage.png" class="tutimg-spread"/>
+                <p>2. Open The "Goodbye Volcano High_Data" folder, right-click the "saves" folder, and hit copy</p>
+                <p>3. Paste it literally anywhere you want. I put mine on my desktop. </p>
+                <p>You can copy-paste it from wherever back to the Goodbye Volcano High_Data folder to restore a save </p>
+
+                <div>
+                    <button style="margin-left: 80%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+        </div>
+        <div id="scene-bepinex-unzip" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Installing BepinEx</h1>
+                <p>We're now going to start installing BepinEx. BepinEx is a "mod loader", which means
+                it does some under-the-hood-stuff to allow loading custom content.</p>
+                <p>It has no "installer" you run, it instead is installed by simply copying some files. It's awesome.</p>
+                <p>You only need to install it once.</p>
+                <p>1. Download this file: <a href="BepInEx_win_x64_5.4.23.1.zip">BepInEx_win_x64_5.4.23.1.zip</a></p>
+                <p>2. Click it in your Downloads folder and click "Extract All". Click through all the windows extraction stuff.</p>
+                <img src="img/bepin_extract.png" class="tutimg-spread"/>
+                <p>3. It should open the extracted folder contents when done</p>
+
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+        </div>
+        <div id="scene-bepinex-copy" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Installing BepinEx</h1>
+                <p>Now we're going to copy the BepinEx files into the game folder.</p>
+                <p>1. Select all the files in the extracted folder</p>
+                <img src="img/bepin_select.png" class="tutimg-spread"/>
+                <p>2. Copy the contents, then paste them in the GVH folder</p>
+                <img src="img/bepin_paste.png" class="tutimg-spread"/>
+                <p>3. You should see a "BepInEx" folder in the same folder as the Goodbye Volcano High_Data folder</p>
+
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+        </div>
+        <div id="scene-bepinex-done" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>BepinEx Installed!</h1>
+                <p>Your game folder should look like this:</p>
+                <img src="img/bepin_done.png" class="tutimg-spread"/>
+                <p>You've now installed BepinEx. You only need to do this once.</p>
+                <p>Next we'll install the mod itself.</p>
+
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+        </div>
+        <div id="scene-open-plugins" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Installing the Mod</h1>
+                <p>1. Open the BepinEx folder in your Goodbye Volcano High folder.</p>
+                <p>Open the "plugins" folder</p>
+                <img src="img/pluginfolder.png" class="tutimg-spread"/>
+
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+        </div>
+        <div id="scene-copy-mod" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Installing the Mod</h1>
+                <p>Now we're going to "install the mod"</p>
+                <p>1. Download this file: <a href="mods/ChapterSelect.dll">ChapterSelect.dll</a></p>
+                <p>2. Drag it from your downloads folder into the "plugins" folder you just opened.</p>
+                <img src="img/draaag.png" class="tutimg-spread"/>
+
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+            </div>
+        <div id="scene-mod-done" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Mod Installed!</h1>
+                <p>Go start the game!</p>
+
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Next Step</button>
+                </div>
+            </div>
+            </div>
+        <div id="scene-done" class="scene-onecol hidden gone">
+            <div class="contentregion">
+                <h1>Done!</h1>
+                <p>You've now installed the mod. Your startup screen should look like this:</p>
+                <img src="img/chsel_done.png" class="tutimg-spread"/>
+                <p>If you have any issues, with this guide or the mod, please message <code>onyx.eyes</code> on discord.</p>
+
+                <div>
+                    <button style="width: 20%;height: 40px;" type="submit" onclick="loadPrevScene()">Previous Step</button>
+                    <button style="margin-left: 59%;width: 20%;height: 40px;" type="submit" onclick="spinQueue()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<div id="footer"><span style="position: absolute;bottom: 0;color: #313131;">I died inside like halfway through working on this website. Sorry if it lacks the polish I usually try to achieve.</span></div>
+</body>
+</html>
